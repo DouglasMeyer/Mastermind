@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Mastermind</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      html, body { height: 100%; }
+
+      body {
+        display: grid;
+        align-items: end;
+      }
+
+      .board {
+        display: inline-grid;
+        height: 12em;
+        margin: 1em auto;
+        grid-template-columns: repeat(5, 1fr);
+        align-items: end;
+        justify-items: center;
+      }
+    </style>
+  </head>
+  <body>
+
+    <form class="board">
+      <button>Check</button>
+      <select></select>
+      <select></select>
+      <select></select>
+      <select></select>
+    </form>
+
+    <script>
+      const colors = ['🔴', '💚', '🔵', '💛', '⚫️', '⚪️'];
+      document.querySelectorAll('select').forEach((select) => {
+        colors.forEach((color) => {
+          const option = document.createElement('option');
+          option.textContent = color;
+          select.appendChild(option);
+        });
+      });
+
+      const key = new Array(4).fill().map(() => colors[Math.floor(Math.random() * colors.length)]);
+
+      const button = document.querySelector('button');
+      function span(html) {
+        const el = document.createElement('span');
+        el.innerHTML = html;
+        return el;
+      }
+      document.querySelector('form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const guesses = [];
+        form.querySelectorAll('select').forEach((select) => {
+          guesses.push(select.value);
+        })
+        form.insertBefore(span(
+          guesses.filter((guess, index) => key[index] === guess).map(() => '◼').join('') +
+          guesses.filter((guess, index) => key[index] !== guess && key.includes(guess)).map(() => '◻').join('')
+        ), button);
+        guesses.forEach(guess =>
+          form.insertBefore(span( guess ), button)
+        );
+      });
+    </script>
+  </body>
+</html>
