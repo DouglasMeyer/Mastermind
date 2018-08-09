@@ -11,27 +11,42 @@
       body {
         display: grid;
         align-items: end;
+        margin: 0;
+        background-color: #444;
       }
 
       .board {
         display: inline-grid;
-        height: 12em;
+        min-height: 23em;
         margin: 1em auto;
-        grid-template-columns: 4em repeat(4, 1fr);
-        grid-column-gap: 0.5em;
-        align-items: end;
-        justify-items: center;
+        background-color: #966;
+        padding: 1em;
+        border-radius: 0.5em;
       }
+
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+      }
+      td {
+        border: 1px solid rgba(0,0,0, 0.2);
+      }
+      td:first-child { width: 4em; }
+      td + td, tr:last-child > td { text-align: center; }
     </style>
   </head>
   <body>
 
     <form class="board">
-      <button>Check</button>
-      <select></select>
-      <select></select>
-      <select></select>
-      <select></select>
+      <table>
+        <tr>
+          <td><button>Check</button></td>
+          <td><select></select></td>
+          <td><select></select></td>
+          <td><select></select></td>
+          <td><select></select></td>
+        </tr>
+      </table>
     </form>
 
     <script>
@@ -47,11 +62,7 @@
       const key = new Array(4).fill().map(() => colors[Math.floor(Math.random() * colors.length)]);
 
       const button = document.querySelector('button');
-      function span(html) {
-        const el = document.createElement('span');
-        el.innerHTML = html;
-        return el;
-      }
+      const lastRow = document.querySelector('tr');
       document.querySelector('form').addEventListener('submit', (event) => {
         event.preventDefault();
         const form = event.target;
@@ -69,11 +80,11 @@
             ),
           0
         ) - matches;
-        form.insertBefore(span(
-          new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')
-        ), button);
-        guesses.forEach(guess =>
-          form.insertBefore(span( guess ), button)
+        lastRow.insertAdjacentHTML('beforeBegin',
+          `<tr>
+            <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
+            ${guesses.map(guess => `<td>${guess}</td>`).join('')}
+          </tr>`
         );
       });
     </script>
