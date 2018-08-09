@@ -17,7 +17,8 @@
         display: inline-grid;
         height: 12em;
         margin: 1em auto;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: 4em repeat(4, 1fr);
+        grid-column-gap: 0.5em;
         align-items: end;
         justify-items: center;
       }
@@ -58,9 +59,18 @@
         form.querySelectorAll('select').forEach((select) => {
           guesses.push(select.value);
         })
+
+        const matches = key.filter((k, i) => guesses[i] === k).length;
+        const misses = colors.reduce(
+          (count, color) =>
+            count + Math.min(
+              key.filter(k => k === color).length,
+              guesses.filter(g => g === color).length
+            ),
+          0
+        ) - matches;
         form.insertBefore(span(
-          guesses.filter((guess, index) => key[index] === guess).map(() => '◼').join('') +
-          guesses.filter((guess, index) => key[index] !== guess && key.includes(guess)).map(() => '◻').join('')
+          new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')
         ), button);
         guesses.forEach(guess =>
           form.insertBefore(span( guess ), button)
