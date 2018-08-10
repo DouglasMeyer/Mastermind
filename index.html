@@ -14,6 +14,11 @@
         margin: 0;
         background-color: #444;
       }
+      svg {
+        width: 20px;
+        height: 20px;
+        stroke: black;
+      }
 
       .board {
         display: inline-grid;
@@ -33,32 +38,73 @@
       }
       td:first-child { width: 4em; }
       td + td, tr:last-child > td { text-align: center; }
+      tr + tr:last-child > td { border-top: 2px solid rgba(0,0,0, 0.4); }
     </style>
   </head>
   <body>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 20 20">
+      <defs>
+        <circle id="circle" cx="10" cy="10" r="8" />
+      </defs>
+    </svg>
 
     <form class="board">
       <table>
         <tr>
           <td><button>Check</button></td>
-          <td><select></select></td>
-          <td><select></select></td>
-          <td><select></select></td>
-          <td><select></select></td>
+          <td><color-picker></color-picker></td>
+          <td><color-picker></color-picker></td>
+          <td><color-picker></color-picker></td>
+          <td><color-picker></color-picker></td>
         </tr>
       </table>
     </form>
 
-    <script>
-      const colors = ['🔴', '💚', '🔵', '💛', '⚫️', '⚪️'];
-      document.querySelectorAll('select').forEach((select) => {
-        colors.forEach((color) => {
-          const option = document.createElement('option');
-          option.textContent = color;
-          select.appendChild(option);
-        });
-      });
+    <template id="color-picker">
+      <style>
+        color-picker {
+          display: inline-block;
+          position: relative;
+          overflow: hidden;
+          height: 20px;
+          width: 20px;
+        }
+        color-picker:hover {
+          overflow: visible;
+        }
+        color-picker > div {
+          position: absolute;
+        }
+        color-picker:hover > div {
+          background-color: rgba(255,255,255, 0.4);
+          outline: 1px solid black;
+          padding: 5px;
+          z-index: 1;
+          transform: translate(-5px, -5px);
+        }
+        color-picker > div > svg * {
+          pointer-events: none;
+        }
+        color-picker[color="red"] > div { top: 1px; }
+        color-picker[color="green"] > div { top: -23px; }
+        color-picker[color="blue"] > div { top: -47px; }
+        color-picker[color="yellow"] > div { top: -71px; }
+        color-picker[color="black"] > div { top: -95px; }
+        color-picker[color="white"] > div { top: -119px; }
+      </style>
+      <div>
+        <svg fill="red"><use href="#circle" /></svg>
+        <svg fill="green"><use href="#circle" /></svg>
+        <svg fill="blue"><use href="#circle" /></svg>
+        <svg fill="yellow"><use href="#circle" /></svg>
+        <svg fill="black"><use href="#circle" /></svg>
+        <svg fill="white"><use href="#circle" /></svg>
+      </div>
+      <input type="hidden" />
+    </template>
 
+    <script>
+      const colors = ['red', 'green', 'blue', 'yellow', 'black', 'white'];
       const key = new Array(4).fill().map(() => colors[Math.floor(Math.random() * colors.length)]);
 
       const button = document.querySelector('button');
@@ -67,7 +113,7 @@
         event.preventDefault();
         const form = event.target;
         const guesses = [];
-        form.querySelectorAll('select').forEach((select) => {
+        form.querySelectorAll('input').forEach((select) => {
           guesses.push(select.value);
         })
 
@@ -83,10 +129,34 @@
         lastRow.insertAdjacentHTML('beforeBegin',
           `<tr>
             <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
-            ${guesses.map(guess => `<td>${guess}</td>`).join('')}
+            ${guesses.map(guess => `<td style="fill:${guess}"><svg><use href="#circle" /></svg></td>`).join('')}
           </tr>`
         );
       });
+
+      class ColorPicker extends HTMLElement {
+        constructor() {
+          super();
+          const tpl = document.querySelector('template#color-picker');
+          this.appendChild(tpl.content.cloneNode(true));
+        }
+
+        connectedCallback() {
+          const input = this.querySelector('input');
+
+          this.setAttribute('color', 'red');
+          input.value = 'red';
+
+          this.addEventListener('click', function(event) {
+            if (event.target.tagName !== "svg") return;
+
+            const color = event.target.getAttribute('fill');
+            this.setAttribute('color', color);
+            input.value = color;
+          }, false);
+        }
+      }
+      window.customElements.define('color-picker', ColorPicker);
     </script>
   </body>
 </html>
