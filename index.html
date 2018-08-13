@@ -29,10 +29,6 @@
         border-radius: 0.5em;
       }
 
-      table {
-        border-spacing: 0;
-        border-collapse: collapse;
-      }
       td {
         border: 1px solid rgba(0,0,0, 0.2);
       }
@@ -42,23 +38,7 @@
     </style>
   </head>
   <body>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 20 20">
-      <defs>
-        <circle id="circle" cx="10" cy="10" r="8" />
-      </defs>
-    </svg>
-
-    <form class="board">
-      <table>
-        <tr>
-          <td><button>Check</button></td>
-          <td><color-picker></color-picker></td>
-          <td><color-picker></color-picker></td>
-          <td><color-picker></color-picker></td>
-          <td><color-picker></color-picker></td>
-        </tr>
-      </table>
-    </form>
+    <mastermind-game class="board"></mastermind-game>
 
     <template id="color-picker">
       <style>
@@ -93,45 +73,109 @@
         color-picker[color="white"] > div { top: -119px; }
       </style>
       <div>
-        <svg fill="red"><use href="#circle" /></svg>
-        <svg fill="green"><use href="#circle" /></svg>
-        <svg fill="blue"><use href="#circle" /></svg>
-        <svg fill="yellow"><use href="#circle" /></svg>
-        <svg fill="black"><use href="#circle" /></svg>
-        <svg fill="white"><use href="#circle" /></svg>
+        <svg width="20" height="20" fill="red"><circle cx="10" cy="10" r="8" /></svg>
+        <svg width="20" height="20" fill="green"><circle cx="10" cy="10" r="8" /></svg>
+        <svg width="20" height="20" fill="blue"><circle cx="10" cy="10" r="8" /></svg>
+        <svg width="20" height="20" fill="yellow"><circle cx="10" cy="10" r="8" /></svg>
+        <svg width="20" height="20" fill="black"><circle cx="10" cy="10" r="8" /></svg>
+        <svg width="20" height="20" fill="white"><circle cx="10" cy="10" r="8" /></svg>
       </div>
       <input type="hidden" />
     </template>
 
     <script>
       const colors = ['red', 'green', 'blue', 'yellow', 'black', 'white'];
-      const key = new Array(4).fill().map(() => colors[Math.floor(Math.random() * colors.length)]);
+      const form = document.querySelector('form');
+      function randInt(max) {
+        return Math.floor(Math.random() * max);
+      }
 
-      const button = document.querySelector('button');
-      const lastRow = document.querySelector('tr');
-      document.querySelector('form').addEventListener('submit', (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const guesses = [];
-        form.querySelectorAll('input').forEach((select) => {
-          guesses.push(select.value);
-        })
+      customElements.define("mastermind-game", class MastermindGame extends HTMLElement {
+        constructor() {
+          super();
+          this.root = this.attachShadow({mode: "open"});
+          this.state = { key: [], guesses: [] };
+        }
 
-        const matches = key.filter((k, i) => guesses[i] === k).length;
-        const misses = colors.reduce(
-          (count, color) =>
-            count + Math.min(
-              key.filter(k => k === color).length,
-              guesses.filter(g => g === color).length
-            ),
-          0
-        ) - matches;
-        lastRow.insertAdjacentHTML('beforeBegin',
-          `<tr>
-            <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
-            ${guesses.map(guess => `<td style="fill:${guess}"><svg><use href="#circle" /></svg></td>`).join('')}
-          </tr>`
-        );
+        connectedCallback() {
+          this.newGame();
+        }
+
+        newGame() {
+          const pool = colors.slice();
+          this.state = {
+            key: new Array(4).fill().map(() => colors[randInt(colors.length)]),
+            // key: new Array(4).fill().map(() => pool.splice(randInt(pool.length), 1)[0]),
+            guesses: []
+          };
+          this.render();
+        }
+
+        addGuess(guess) {
+          this.state.guesses.push(guess);
+          this.render();
+        }
+
+        render() {
+          const { guesses, key } = this.state
+          let lastGuess = guesses.slice(-1)[0] || [];
+          const won = key.every((k,i) => lastGuess[i] === k);
+          if (!lastGuess.length) lastGuess = ['red', 'red', 'red', 'red'];
+
+          this.root.innerHTML = `
+            <style>
+              form { display: grid; grid-template-rows: 1fr; }
+            </style>
+            <form>
+              <table>
+                ${
+                  guesses.map(guess => {
+                    const matches = key.filter((k, i) => guess[i] === k).length;
+                    const misses = colors.reduce(
+                      (count, color) =>
+                        count + Math.min(
+                          key.filter(k => k === color).length,
+                          guess.filter(g => g === color).length
+                        ),
+                      0
+                    ) - matches;
+                    return `<tr>
+                      <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
+                      ${guess.map(g => `<td><svg width="20" height="20" fill="${g}"><circle cx="10" cy="10" r="8" /></svg></td>`).join('')}
+                    </tr>`;
+                  }).join('')
+                }
+                ${ won ? '' : `
+                  <tr>
+                    <td><button id="check">Check</button></td>
+                    <td><color-picker color="${lastGuess[0]}"></color-picker></td>
+                    <td><color-picker color="${lastGuess[1]}"></color-picker></td>
+                    <td><color-picker color="${lastGuess[2]}"></color-picker></td>
+                    <td><color-picker color="${lastGuess[3]}"></color-picker></td>
+                  </tr>
+                `}
+              </table>
+              <div>
+                ${ won
+                  ? `Won in ${guesses.length} turns`
+                  : ''
+                }
+                <button id="new_game">${won ? 'New Game' : 'give-up'}</button>
+              </div>
+            </form>
+          `;
+          const form = this.root.querySelector('form');
+          const check = form.querySelector('button#check')
+          check && check.addEventListener('click', (event) => {
+            event.preventDefault();
+            this.addGuess([...form.querySelectorAll('input')].map(e => e.value))
+          });
+          const newGame = form.querySelector('button#new_game')
+          newGame && newGame.addEventListener('click', (event) => {
+            event.preventDefault();
+            this.newGame();
+          });
+        }
       });
 
       class ColorPicker extends HTMLElement {
@@ -142,18 +186,19 @@
         }
 
         connectedCallback() {
-          const input = this.querySelector('input');
-
-          this.setAttribute('color', 'red');
-          input.value = 'red';
+          this.setColor(this.getAttribute('color') || 'red');
 
           this.addEventListener('click', function(event) {
             if (event.target.tagName !== "svg") return;
 
             const color = event.target.getAttribute('fill');
-            this.setAttribute('color', color);
-            input.value = color;
+            this.setColor(color);
           }, false);
+        }
+
+        setColor(color) {
+          this.setAttribute('color', color);
+          this.querySelector('input').value = color;
         }
       }
       window.customElements.define('color-picker', ColorPicker);
