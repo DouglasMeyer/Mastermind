@@ -113,12 +113,20 @@
             this.addGuess([...this.el.querySelectorAll('input')].map(e => e.value))
           });
           this.refs.newGame.addEventListener('click', (event) => {
-            this.newGame();
+            const lastTurn = this.game.turns.slice(-1)[0];
+            const won = lastTurn && lastTurn.matches === 4;
+            if (won || this.giveUp) {
+              this.newGame();
+            } else {
+              this.giveUp = true;
+              this.render();
+            }
           });
           this.newGame();
         }
         newGame() {
           this.game = new MastermindGame(colors, true);
+          this.giveUp = false;
           this.render();
         }
         addGuess(guess) {
@@ -130,12 +138,20 @@
           const { turns } = this.game
           const lastTurn = turns.slice(-1)[0];
           const won = lastTurn && lastTurn.matches === 4;
-          const lastGuess = lastTurn ? lastTurn.guess : ['red', 'red', 'red', 'red'];
+          const lastGuess = this.giveUp
+            ? this.game.key
+            : lastTurn
+            ? lastTurn.guess : ['red', 'red', 'red', 'red'];
 
+          this.refs.check.style.display = this.giveUp ? 'none' : null;
           this.refs.turns.innerHTML = turns.map(this.renderTurn, this).join('');
           this.refs.footer.style.display = won ? 'none' : null;
-          this.refs.message.textContent = won ? `Won in ${turns.length} turns` : '';
-          this.refs.newGame.textContent = won ? 'New Game' : 'give-up';
+          this.refs.message.innerHTML = won
+            ? `Won in ${turns.length} turns`
+            : this.giveUp
+            ? 'Gave-up'
+            : '';
+          this.refs.newGame.textContent = won || this.giveUp ? 'New Game' : 'give-up';
 
           this.el.querySelectorAll('color-picker').forEach((picker, index) => {
             picker.setAttribute('color', lastGuess[index]);
