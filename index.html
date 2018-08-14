@@ -22,15 +22,12 @@
 
       .board {
         display: inline-grid;
+        grid-template-rows: 1fr;
         min-height: 23em;
         margin: 1em auto;
         background-color: #966;
         padding: 1em;
         border-radius: 0.5em;
-      }
-      .board > form {
-        display: grid;
-        grid-template-rows: 1fr;
       }
 
       .board table {
@@ -38,8 +35,8 @@
         border: 1px solid rgba(0,0,0, 0.2);
       }
       td:first-child { width: 4em; }
-      td + td, tr:last-child > td { text-align: center; }
-      tr + tr:last-child > td { border-top: 2px solid rgba(0,0,0, 0.4); }
+      td + td, tfoot td { text-align: center; }
+      tbody:not(:empty) + tfoot td { border-top: 2px solid rgba(0,0,0, 0.4); }
     </style>
   </head>
   <body>
@@ -90,6 +87,30 @@
       class GameView {
         constructor(el) {
           this.el = el;
+          this.el.innerHTML = `
+            <table>
+              <tbody />
+              <tfoot>
+                <tr>
+                  <td><button id="check">Check</button></td>
+                  <td><color-picker /></td>
+                  <td><color-picker /></td>
+                  <td><color-picker /></td>
+                  <td><color-picker /></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div>
+              <span id="message"></span>
+              <button id="new_game">give-up</button>
+            </div>
+          `;
+          this.el.querySelector('button#check').addEventListener('click', (event) => {
+            this.addGuess([...this.el.querySelectorAll('input')].map(e => e.value))
+          });
+          this.el.querySelector('button#new_game').addEventListener('click', (event) => {
+            this.newGame();
+          });
           this.newGame();
         }
         newGame() {
@@ -107,47 +128,27 @@
           const won = lastTurn && lastTurn.matches === 4;
           const lastGuess = lastTurn ? lastTurn.guess : ['red', 'red', 'red', 'red'];
 
-          this.el.innerHTML = `
-            <form>
-              <table>
-                ${
-                  turns.map(({ guess, matches, misses }) =>
-                    `<tr>
-                      <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
-                      ${guess.map(g => `<td><svg width="20" height="20" fill="${g}"><circle cx="10" cy="10" r="8" /></svg></td>`).join('')}
-                    </tr>`
-                  ).join('')
-                }
-                ${ won ? '' : `
-                  <tr>
-                    <td><button id="check">Check</button></td>
-                    <td><color-picker color="${lastGuess[0]}"></color-picker></td>
-                    <td><color-picker color="${lastGuess[1]}"></color-picker></td>
-                    <td><color-picker color="${lastGuess[2]}"></color-picker></td>
-                    <td><color-picker color="${lastGuess[3]}"></color-picker></td>
-                  </tr>
-                `}
-              </table>
-              <div>
-                ${ won
-                  ? `Won in ${turns.length} turns`
-                  : ''
-                }
-                <button id="new_game">${won ? 'New Game' : 'give-up'}</button>
-              </div>
-            </form>
-          `;
-          const form = this.el.querySelector('form');
-          const check = form.querySelector('button#check')
-          check && check.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.addGuess([...form.querySelectorAll('input')].map(e => e.value))
+          const tbody = this.el.querySelector('tbody');
+          tbody.innerHTML = turns.map(this.renderTurn, this).join('');
+
+          const tfoot = this.el.querySelector('tfoot');
+          tfoot.style.display = won ? 'none' : null;
+
+          this.el.querySelectorAll('color-picker').forEach((picker, index) => {
+            picker.setAttribute('color', lastGuess[index]);
           });
-          const newGame = form.querySelector('button#new_game')
-          newGame && newGame.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.newGame();
-          });
+
+          const message = this.el.querySelector('#message');
+          message.textContent = won ? `Won in ${turns.length} turns` : '';
+
+          const newGame = this.el.querySelector('button#new_game');
+          newGame.textContent = won ? 'New Game' : 'give-up';
+        }
+        renderTurn({ guess, matches, misses }) {
+          return `<tr>
+            <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
+            ${guess.map(g => `<td><svg width="20" height="20" fill="${g}"><circle cx="10" cy="10" r="8" /></svg></td>`).join('')}
+          </tr>`;
         }
       }
 
@@ -198,10 +199,19 @@
     </template>
     <script>
       class ColorPicker extends HTMLElement {
+        static get observedAttributes() {
+          return ["color"];
+        }
+
+        attributeChangedCallback(name, old, change) {
+          if (name === 'color') this.input.value = change;
+        }
+
         constructor() {
           super();
           const tpl = document.querySelector('template#color-picker');
           this.appendChild(tpl.content.cloneNode(true));
+          this.input = this.querySelector('input');
         }
 
         connectedCallback() {
@@ -217,7 +227,7 @@
 
         setColor(color) {
           this.setAttribute('color', color);
-          this.querySelector('input').value = color;
+          this.input.value = color;
         }
       }
       window.customElements.define('color-picker', ColorPicker);
