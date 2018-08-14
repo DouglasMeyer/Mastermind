@@ -34,7 +34,7 @@
         border-spacing: 0;
         border: 1px solid rgba(0,0,0, 0.2);
       }
-      td:first-child { width: 4em; }
+      td:first-child { width: 4.5em; }
       td + td, tfoot td { text-align: center; }
       tbody:not(:empty) + tfoot td { border-top: 2px solid rgba(0,0,0, 0.4); }
     </style>
@@ -89,10 +89,10 @@
           this.el = el;
           this.el.innerHTML = `
             <table>
-              <tbody />
-              <tfoot>
+              <tbody data-ref="turns" />
+              <tfoot data-ref="footer">
                 <tr>
-                  <td><button id="check">Check</button></td>
+                  <td><button data-ref="check">Check</button></td>
                   <td><color-picker /></td>
                   <td><color-picker /></td>
                   <td><color-picker /></td>
@@ -101,14 +101,18 @@
               </tfoot>
             </table>
             <div>
-              <span id="message"></span>
-              <button id="new_game">give-up</button>
+              <span data-ref="message"></span>
+              <button data-ref="newGame">give-up</button>
             </div>
           `;
-          this.el.querySelector('button#check').addEventListener('click', (event) => {
+          this.refs = [...this.el.querySelectorAll('[data-ref]')].reduce((refs, el) => {
+            refs[el.getAttribute('data-ref')] = el;
+            return refs;
+          }, {});
+          this.refs.check.addEventListener('click', (event) => {
             this.addGuess([...this.el.querySelectorAll('input')].map(e => e.value))
           });
-          this.el.querySelector('button#new_game').addEventListener('click', (event) => {
+          this.refs.newGame.addEventListener('click', (event) => {
             this.newGame();
           });
           this.newGame();
@@ -128,21 +132,14 @@
           const won = lastTurn && lastTurn.matches === 4;
           const lastGuess = lastTurn ? lastTurn.guess : ['red', 'red', 'red', 'red'];
 
-          const tbody = this.el.querySelector('tbody');
-          tbody.innerHTML = turns.map(this.renderTurn, this).join('');
-
-          const tfoot = this.el.querySelector('tfoot');
-          tfoot.style.display = won ? 'none' : null;
+          this.refs.turns.innerHTML = turns.map(this.renderTurn, this).join('');
+          this.refs.footer.style.display = won ? 'none' : null;
+          this.refs.message.textContent = won ? `Won in ${turns.length} turns` : '';
+          this.refs.newGame.textContent = won ? 'New Game' : 'give-up';
 
           this.el.querySelectorAll('color-picker').forEach((picker, index) => {
             picker.setAttribute('color', lastGuess[index]);
           });
-
-          const message = this.el.querySelector('#message');
-          message.textContent = won ? `Won in ${turns.length} turns` : '';
-
-          const newGame = this.el.querySelector('button#new_game');
-          newGame.textContent = won ? 'New Game' : 'give-up';
         }
         renderTurn({ guess, matches, misses }) {
           return `<tr>
