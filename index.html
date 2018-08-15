@@ -19,6 +19,7 @@
         height: 20px;
         stroke: black;
       }
+      [title] { cursor: help; }
 
       .board {
         display: inline-grid;
@@ -42,48 +43,8 @@
   <body>
     <div class="board"></div>
 
+    <script src="./index.js"></script>
     <script>
-      function firstOccurance(item, index, array) {
-        return array.indexOf(item) === index;
-      }
-      function randInt(max) {
-        return Math.floor(Math.random() * max);
-      }
-
-      class MastermindGame {
-        static overlap(key=[], colors=[]) {
-          const matches = key.filter((k, i) => colors[i] === k).length;
-          const misses = colors.filter(firstOccurance).reduce(
-            (count, color) =>
-              count + Math.min(
-                key.filter(k => k === color).length,
-                colors.filter(c => c === color).length
-              ),
-            0
-          ) - matches;
-
-          return { matches, misses };
-        }
-
-        constructor(colors=['red', 'green', 'blue', 'yellow', 'black', 'white'], repeats=true) {
-          const pool = colors.slice();
-
-          this.key = repeats
-            ? new Array(4).fill().map(() => pool[randInt(pool.length)])
-            : new Array(4).fill().map(() => pool.splice(randInt(pool.length), 1)[0]);
-          this.turns = [];
-        }
-
-        guess(colors=[]) {
-          const { matches, misses } = this.constructor.overlap(this.key, colors);
-
-          const turn = { guess: colors, matches, misses };
-          this.turns.push(turn);
-          return turn;
-        }
-      }
-
-      const colors = ['red', 'green', 'blue', 'yellow', 'black', 'white'];
       class GameView {
         constructor(el) {
           this.el = el;
@@ -101,18 +62,25 @@
               </tfoot>
             </table>
             <div>
-              <span data-ref="message"></span>
-              <button data-ref="newGame">give-up</button>
+              <div>
+                <span data-ref="message"></span>
+                <button data-ref="newGame">give-up</button>
+              </div>
+              <div data-ref="duplicateMessage">Duplicate colors in answer</div>
+              <label data-ref="duplicateLabel" for="duplicate" style="display:none">
+                Duplicate colors in answer
+              </label>
+              <input type="checkbox" data-ref="duplicate" id="duplicate" checked />
             </div>
           `;
           this.refs = [...this.el.querySelectorAll('[data-ref]')].reduce((refs, el) => {
             refs[el.getAttribute('data-ref')] = el;
             return refs;
           }, {});
-          this.refs.check.addEventListener('click', (event) => {
-            this.addGuess([...this.el.querySelectorAll('input')].map(e => e.value))
+          this.refs.check.addEventListener('click', () => {
+            this.addGuess([...this.el.querySelectorAll('color-picker input')].map(e => e.value))
           });
-          this.refs.newGame.addEventListener('click', (event) => {
+          this.refs.newGame.addEventListener('click', () => {
             const lastTurn = this.game.turns.slice(-1)[0];
             const won = lastTurn && lastTurn.matches === 4;
             if (won || this.giveUp) {
@@ -125,7 +93,8 @@
           this.newGame();
         }
         newGame() {
-          this.game = new MastermindGame(colors, true);
+          this.game = new MastermindGame(colors, this.refs.duplicate.checked);
+          this.refs.duplicateMessage.textContent = this.refs.duplicate.checked ? 'Duplicate colors in answer' : 'No duplicate colors in answer';
           this.giveUp = false;
           this.render();
         }
@@ -152,6 +121,9 @@
             ? 'Gave-up'
             : '';
           this.refs.newGame.textContent = won || this.giveUp ? 'New Game' : 'give-up';
+          this.refs.duplicateLabel.style.display =
+          this.refs.duplicate.style.display = won || this.giveUp ? null : 'none';
+          this.refs.duplicateMessage.style.display = won || this.giveUp ? 'none' : null;
 
           this.el.querySelectorAll('color-picker').forEach((picker, index) => {
             picker.setAttribute('color', lastGuess[index]);
@@ -159,13 +131,13 @@
         }
         renderTurn({ guess, matches, misses }) {
           return `<tr>
-            <td>${new Array(matches).fill('◼').join('') + new Array(misses).fill('◻').join('')}</td>
+            <td><span title="color in correct spot">${new Array(matches).fill('◼').join('')}</span><span title="color not in correct spot">${new Array(misses).fill('◻').join('')}</span></td>
             ${guess.map(g => `<td><svg width="20" height="20" fill="${g}"><circle cx="10" cy="10" r="8" /></svg></td>`).join('')}
           </tr>`;
         }
       }
 
-      new GameView(document.querySelector('.board'));
+      const gameView = new GameView(document.querySelector('.board'));
     </script>
 
     <template id="color-picker">
