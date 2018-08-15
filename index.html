@@ -41,38 +41,37 @@
     </style>
   </head>
   <body>
-    <div class="board"></div>
+    <div class="board">
+      <table>
+        <tbody data-ref="turns" />
+        <tfoot data-ref="footer">
+          <tr>
+            <td><button data-ref="check">Check</button></td>
+            <td><color-picker /></td>
+            <td><color-picker /></td>
+            <td><color-picker /></td>
+            <td><color-picker /></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div>
+        <div>
+          <span data-ref="message"></span>
+          <button data-ref="newGame">give-up</button>
+        </div>
+        <div data-ref="duplicateMessage">Duplicate colors in answer</div>
+        <label data-ref="duplicateLabel" for="duplicate" style="display:none">
+          Duplicate colors in answer
+        </label>
+        <input type="checkbox" data-ref="duplicate" id="duplicate" checked />
+      </div>
+    </div>
 
     <script src="./index.js"></script>
     <script>
       class GameView {
         constructor(el) {
           this.el = el;
-          this.el.innerHTML = `
-            <table>
-              <tbody data-ref="turns" />
-              <tfoot data-ref="footer">
-                <tr>
-                  <td><button data-ref="check">Check</button></td>
-                  <td><color-picker /></td>
-                  <td><color-picker /></td>
-                  <td><color-picker /></td>
-                  <td><color-picker /></td>
-                </tr>
-              </tfoot>
-            </table>
-            <div>
-              <div>
-                <span data-ref="message"></span>
-                <button data-ref="newGame">give-up</button>
-              </div>
-              <div data-ref="duplicateMessage">Duplicate colors in answer</div>
-              <label data-ref="duplicateLabel" for="duplicate" style="display:none">
-                Duplicate colors in answer
-              </label>
-              <input type="checkbox" data-ref="duplicate" id="duplicate" checked />
-            </div>
-          `;
           this.refs = [...this.el.querySelectorAll('[data-ref]')].reduce((refs, el) => {
             refs[el.getAttribute('data-ref')] = el;
             return refs;
