@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Mastermind</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      script, code {
+        display: block;
+        font-family: monospace;
+        white-space: pre-wrap;
+        margin: 1ex 0;
+      }
+      script {
+        background-color: #DDD;
+        padding: 0 1em;
+      }
+      code {
+        background-color: #DFD;
+        padding: 1ex 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./index.js"></script>
+    <script>
+// API
+document.write(`<code>${JSON.stringify(colors)}</code>`);
+    </script>
+    <script>
+const overlap = MastermindGame.overlap(
+  [1, 2, 3, 4],
+  [1, 4, 2, 5]
+);
+document.write(`<code>${JSON.stringify(overlap)}</code>`);
+    </script>
+    <script>
+let game = new MastermindGame(colors, true);
+game.guess(['red', 'green', 'blue', 'yellow']);
+document.write(`<code>${JSON.stringify(game, null, 2)}</code>`);
+    </script>
+    <script>
+// AI demo
+const colorCombinations = new Array(Math.pow(colors.length, 4)).fill().map((_x, i) => [
+  colors[Math.floor(i / colors.length / colors.length / colors.length) % colors.length],
+  colors[Math.floor(i / colors.length / colors.length) % colors.length],
+  colors[Math.floor(i / colors.length) % colors.length],
+  colors[i % colors.length],
+]);
+
+function possibleColors(game) {
+  return colorCombinations.filter((combination) => {
+    if (!game.repeats && !combination.every(firstOccurance)) return false;
+
+    return game.turns.every((turn) => {
+      const { matches, misses } = MastermindGame.overlap(combination, turn.guess);
+      return matches === turn.matches && misses === turn.misses;
+    });
+  });
+}
+function gameWon(game) {
+  const { turns } = game
+  const lastTurn = turns.slice(-1)[0];
+  return lastTurn && lastTurn.matches === 4;
+}
+
+const colorMap = { red: '🔴', green: '💚', blue: '🔵', yellow: '💛', black: '⚫️', white: '⚪️' };
+
+game = new MastermindGame(colors, true);
+document.write(`<code>game.key = ${game.key.map(k => colorMap[k]).join('')}</code>`);
+    </script>
+    <script>
+while (!gameWon(game)) {
+  const guess = possibleColors(game)[0];
+  document.write(`<code>${guess.map(k => colorMap[k]).join('')}</code>`);
+  game.guess(guess);
+}
+    </script>
+  </body>
+</html>
