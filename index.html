@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-126730436-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-126730436-1');
+    </script>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Mastermind</title>
@@ -42,19 +50,21 @@
       [title] { cursor: help; }
 
       .container {
+        box-sizing: border-box;
         height: 100%;
         display: grid;
+        grid-gap: 1em;
         grid-template:
           "instructions" auto
-          "board" auto
           "controls" auto
+          "board" auto
           / auto;
       }
       @media (min-width: 700px) {
         .container {
           grid-template:
+            "instructions controls" 4.6em
             "instructions board" 1fr
-            "instructions controls" auto
             / 1fr 1fr 1fr;
         }
       }
@@ -76,38 +86,34 @@
         display: inline-grid;
         justify-items: center;
         grid-template-rows: 1fr;
-        margin: 1em 0;
         background-color: #966;
-        padding: 1em;
+        padding: 1ex;
+        margin: 0 1ex 1ex;
         border-radius: 0.5em;
       }
       .controls {
         grid-area: controls;
-        min-height: 16em;
+        align-self: end;
+        width: 15em;
       }
 
       .board table {
         border-spacing: 0;
-        border: 1px solid rgba(0,0,0, 0.2);
       }
       td:first-child { width: 3.7em; }
       tbody td + td { width: 1em; }
       td + td, tfoot td { text-align: center; }
-      tbody:not(:empty) + tfoot td { border-top: 2px solid rgba(0,0,0, 0.4); }
 
-      .color-picker { position: relative; }
+      .color-picker > svg:first-child {
+        border: 1px solid black;
+        border-bottom: 0;
+      }
       .color-picker > svg:last-child {
-        display: none;
-        position: absolute;
-        background-color: rgba(255,255,255, 0.4);
-        outline: 1px solid black;
-        border: 2px solid transparent;
-        z-index: 1;
-        top: 100%;
+        display: block;
+        border: 1px solid black;
         width: calc(1.3em * 4);
         height: calc(1.3em * 6);
       }
-      .color-picker:hover > svg:last-child { display: block; }
     </style>
   </head>
   <body>
@@ -177,17 +183,17 @@
         </table>
       </div>
       <div class="controls">
-        <p>
+        <div>
           <span data-ref="duplicateMessage">Duplicate colors in answer</span>
           <label data-ref="duplicateLabel" for="duplicate" style="display:none">
             Duplicate colors in answer
           </label>
           <input type="checkbox" data-ref="duplicate" id="duplicate" checked />
-        </p>
-        <p data-ref="message"></p>
-        <p>
+        </div>
+        <div data-ref="message"></div>
+        <div>
           <button data-ref="newGame" style="display:none">give-up</button>
-        </p>
+        </div>
       </div>
     </div>
 
@@ -226,7 +232,6 @@
         }
         newGame() {
           this.game = null;
-          this.refs.duplicateMessage.textContent = this.refs.duplicate.checked ? 'Duplicate colors in answer' : 'No duplicate colors in answer';
           this.pickedColors = ['red', 'red', 'red', 'red'];
           this.giveUp = false;
           this.render();
@@ -251,6 +256,7 @@
           this.refs.duplicateLabel.style.display =
           this.refs.duplicate.style.display = won || this.giveUp || !this.game ? null : 'none';
           this.refs.duplicateMessage.style.display = won || this.giveUp || !this.game ? 'none' : null;
+          this.refs.duplicateMessage.textContent = (this.game ? this.game.repeats : false) ? 'Duplicate colors in answer' : 'No duplicate colors in answer';
 
           lastGuess.forEach((color, index) => {
             this.refs.colorPicker.querySelector(`g:nth-child(${index+1}) > rect`).setAttribute('y', colors.indexOf(color) * 100/6 - 1 + '%')
