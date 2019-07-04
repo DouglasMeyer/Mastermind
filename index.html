@@ -88,8 +88,12 @@
         grid-template-rows: 1fr;
         background-color: #966;
         padding: 1ex;
-        margin: 0 1ex 1ex;
-        border-radius: 0.5em;
+      }
+      @media (min-width: 700px) {
+        .board {
+          margin: 0 1ex 1ex;
+          border-radius: 0.5em;
+        }
       }
       .controls {
         grid-area: controls;
@@ -117,161 +121,162 @@
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="instructions">
-        <h1>Mastermind</h1>
-        <p>The object is to figure out the 4 colors in the secret answer.</p>
-        <p>After you make a guess, you will be told the number of colors you have in the correct position "◼" and the number of colors in the wrong position "◻". These do not tell you which color is correct, that is for you to deduce.</p>
-      </div>
-      <div class="board">
-        <table>
-          <tbody data-ref="turns"></tbody>
-          <tfoot data-ref="footer">
-            <tr>
-              <td><button data-ref="check">Check</button></td>
-              <td colspan="4" class="color-picker" onclick="">
-                <svg data-ref="pickedColors">
-                  <use xlink:href="#circle" width="1.3em" height="1.3em" x="0%" y="0" fill="red" />
-                  <use xlink:href="#circle" width="1.3em" height="1.3em" x="25%" y="0" fill="red" />
-                  <use xlink:href="#circle" width="1.3em" height="1.3em" x="50%" y="0" fill="red" />
-                  <use xlink:href="#circle" width="1.3em" height="1.3em" x="75%" y="0" fill="red" />
-                </svg>
-                <svg data-ref="colorPicker">
-                  <g data-index="0">
-                    <rect x="-1%" y="-1%" width="26%" height="17.666%" fill="#88E" stroke="none" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="0%" fill="red" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="16.666%" fill="green" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="33.333%" fill="blue" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="50%" fill="yellow" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="66.666%" fill="black" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="83.333%" fill="white" />
-                  </g>
-                  <g data-index="1">
-                    <rect x="24%" y="-1%" width="26%" height="17.666%" fill="#88E" stroke="none" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="0%" fill="red" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="16.666%" fill="green" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="33.333%" fill="blue" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="50%" fill="yellow" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="66.666%" fill="black" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="83.333%" fill="white" />
-                  </g>
-                  <g data-index="2">
-                    <rect x="49%" y="-1%" width="26%" height="17.666%" fill="#88E" stroke="none" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="0%" fill="red" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="16.666%" fill="green" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="33.333%" fill="blue" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="50%" fill="yellow" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="66.666%" fill="black" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="83.333%" fill="white" />
-                  </g>
-                  <g data-index="3">
-                    <rect x="74%" y="-1%" width="26%" height="17.666%" fill="#88E" stroke="none" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="0%" fill="red" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="16.666%" fill="green" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="33.333%" fill="blue" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="50%" fill="yellow" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="66.666%" fill="black" />
-                    <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="83.333%" fill="white" />
-                  </g>
-                  <symbol id="circle">
-                    <circle cx="50%" cy="50%" r="40%" />
-                  </symbol>
-                </svg>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div class="controls">
-        <div>
-          <span data-ref="duplicateMessage">Duplicate colors in answer</span>
-          <label data-ref="duplicateLabel" for="duplicate" style="display:none">
-            Duplicate colors in answer
-          </label>
-          <input type="checkbox" data-ref="duplicate" id="duplicate" checked />
-        </div>
-        <div data-ref="message"></div>
-        <div>
-          <button data-ref="newGame" style="display:none">give-up</button>
-        </div>
-      </div>
-    </div>
+    <div class="container"></div>
 
     <script src="./index.js"></script>
-    <script>
-      class GameView {
-        constructor(el) {
-          this.el = el;
-          this.refs = [...this.el.querySelectorAll('[data-ref]')].reduce((refs, el) => {
-            refs[el.getAttribute('data-ref')] = el;
-            return refs;
-          }, {});
-          this.refs.check.addEventListener('click', () => {
-            if (!this.game) this.game = new MastermindGame(colors, this.refs.duplicate.checked);
-            this.game.guess(this.pickedColors.slice());
-            this.render();
-          });
-          this.refs.newGame.addEventListener('click', () => {
-            const lastTurn = this.game.turns.slice(-1)[0];
-            const won = lastTurn && lastTurn.matches === 4;
-            if (won || this.giveUp) {
-              this.newGame();
-            } else {
-              this.giveUp = true;
-              this.render();
-            }
-          });
-          this.refs.colorPicker.addEventListener('click', ({ target }) => {
-            if (target.tagName !== 'use') return;
-            const index = target.parentElement.dataset.index;
-            const color = target.getAttribute('fill');
-            this.pickedColors[index] = color;
-            this.render();
-          });
+    <script type="module">
+      import { html, render, Component } from 'https://unpkg.com/htm/preact/standalone.mjs';
+
+      const Color = ({ color, ...props }) =>
+        html`<use xlink:href="#circle" width="1.3em" height="1.3em" ...${props} fill="${color}" />`;
+
+      const Turn = ({ guess, matches, misses }) => html`<tr>
+        <td><span title="color in correct spot">${new Array(matches).fill('◼').join('')}</span><span title="color not in correct spot">${new Array(misses).fill('◻').join('')}</span></td>
+        <td><svg>${guess.map((g, i, a) => html`<${Color} color="${g}" x="${`${100/a.length*i}%`}" />`)}</svg></td>
+      </tr>`;
+
+      class GameView extends Component {
+        constructor(props) {
+          super(props);
+          this.handleCheck = this.handleCheck.bind(this);
+          this.handleNewGame = this.handleNewGame.bind(this);
+          this.handlePickColor = this.handlePickColor.bind(this);
           this.newGame();
         }
         newGame() {
-          this.game = null;
-          this.pickedColors = ['red', 'red', 'red', 'red'];
-          this.giveUp = false;
-          this.render();
-        }
-
-        render() {
-          const turns = this.game ? this.game.turns : [];
-          const lastTurn = turns.slice(-1)[0];
-          const won = lastTurn && lastTurn.matches === 4;
-          const lastGuess = this.giveUp ? this.game.key : this.pickedColors;
-
-          this.refs.check.style.display = this.giveUp ? 'none' : null;
-          this.refs.turns.innerHTML = turns.map(this.renderTurn, this).join('');
-          this.refs.footer.style.display = won || this.giveUp ? 'none' : null;
-          this.refs.message.innerHTML = won
-            ? `Won in ${turns.length} turns`
-            : this.giveUp
-            ? `Gave-up. Answer was <svg>${this.game.key.map((c,i) => `<use xlink:href="#circle" height="1.3em" width="1.3em" x="${25*i}%" y="0" fill="${c}" />`).join('')}</svg>`
-            : '';
-          this.refs.newGame.style.display = this.game ? null : 'none';
-          this.refs.newGame.textContent = won || this.giveUp ? 'New Game' : 'give-up';
-          this.refs.duplicateLabel.style.display =
-          this.refs.duplicate.style.display = won || this.giveUp || !this.game ? null : 'none';
-          this.refs.duplicateMessage.style.display = won || this.giveUp || !this.game ? 'none' : null;
-          this.refs.duplicateMessage.textContent = (this.game ? this.game.repeats : false) ? 'Duplicate colors in answer' : 'No duplicate colors in answer';
-
-          lastGuess.forEach((color, index) => {
-            this.refs.colorPicker.querySelector(`g:nth-child(${index+1}) > rect`).setAttribute('y', colors.indexOf(color) * 100/6 - 1 + '%')
-            this.refs.pickedColors.querySelectorAll('use')[index].setAttribute('fill', color);
+          this.setState({
+            game: null,
+            pickedColors: ['red', 'red', 'red', 'red'],
+            giveUp: false
           });
         }
-        renderTurn({ guess, matches, misses }) {
-          return `<tr>
-            <td><span title="color in correct spot">${new Array(matches).fill('◼').join('')}</span><span title="color not in correct spot">${new Array(misses).fill('◻').join('')}</span></td>
-            <td><svg>${guess.map((g, i) => `<use xlink:href="#circle" height="1.3em" width="1.3em" fill="${g}" x="${i*25}%" />`).join('')}</svg></td>
-          </tr>`;
+
+        handleCheck() {
+          const pickedColors = this.state.pickedColors.slice();
+          if (this.state.game) {
+            this.state.game.guess(pickedColors);
+            this.forceUpdate();
+          } else {
+            const game = this.state.game || new MastermindGame(colors, this.duplicateEl.checked);
+            game.guess(this.state.pickedColors.slice());
+            this.setState({ game });
+          }
+        }
+        handleNewGame() {
+          const { game, giveUp } = this.state;
+          const lastTurn = game.turns.slice(-1)[0];
+          const won = lastTurn && lastTurn.matches === 4;
+          if (won || giveUp) {
+            this.newGame();
+          } else {
+            this.setState({ giveUp: true });
+          }
+        }
+        handlePickColor({ target }) {
+          if (target.tagName !== 'use') return;
+          const index = target.parentElement.dataset.index;
+          const color = target.getAttribute('fill');
+          const pickedColors = this.state.pickedColors.slice();
+          pickedColors[index] = color;
+          this.setState({ pickedColors });
+        }
+
+        render({}, { game, pickedColors, giveUp }) {
+          const turns = game ? game.turns : [];
+          const lastTurn = turns.slice(-1)[0];
+          const won = lastTurn && lastTurn.matches === 4;
+          const lastGuess = giveUp ? game.key : pickedColors;
+
+          return html`<div class="container">
+            <div class="instructions">
+              <h1>Mastermind</h1>
+              <p>The object is to figure out the 4 colors in the secret answer.</p>
+              <p>After you make a guess, you will be told the number of colors you have in the correct position "◼" and the number of colors in the wrong position "◻". These do not tell you which color is correct, that is for you to deduce.</p>
+            </div>
+            <div class="board">
+              <table>
+                <tbody>
+                  ${turns.map(turn => html`<${Turn} ...${turn} />`)}
+                </tbody>
+                <tfoot style=${{ display: won || giveUp ? 'none' : null }}>
+                  <tr>
+                    <td><button style=${{ display: giveUp ? 'none' : null }} onClick=${this.handleCheck}>Check</button></td>
+                    <td colspan="4" class="color-picker" onclick="">
+                      <svg>
+                        ${pickedColors.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
+                      </svg>
+                      <svg onClick=${this.handlePickColor}>
+                        <g data-index="0">
+                          <rect x="-1%" y=${`${colors.indexOf(pickedColors[0]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="0%" fill="red" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="16.666%" fill="green" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="33.333%" fill="blue" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="50%" fill="yellow" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="66.666%" fill="black" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="83.333%" fill="white" />
+                        </g>
+                        <g data-index="1">
+                          <rect x="24%" y=${`${colors.indexOf(pickedColors[1]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="0%" fill="red" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="16.666%" fill="green" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="33.333%" fill="blue" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="50%" fill="yellow" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="66.666%" fill="black" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="83.333%" fill="white" />
+                        </g>
+                        <g data-index="2">
+                          <rect x="49%" y=${`${colors.indexOf(pickedColors[2]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="0%" fill="red" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="16.666%" fill="green" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="33.333%" fill="blue" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="50%" fill="yellow" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="66.666%" fill="black" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="83.333%" fill="white" />
+                        </g>
+                        <g data-index="3">
+                          <rect x="74%" y=${`${colors.indexOf(pickedColors[3]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="0%" fill="red" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="16.666%" fill="green" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="33.333%" fill="blue" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="50%" fill="yellow" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="66.666%" fill="black" />
+                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="83.333%" fill="white" />
+                        </g>
+                        <symbol id="circle">
+                          <circle cx="50%" cy="50%" r="40%" />
+                        </symbol>
+                      </svg>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="controls">
+              <div>
+                <span style=${{ display: won || giveUp || !game ? 'none' : null }}>
+                  ${(game ? game.repeats : false) ? 'Duplicate colors in answer' : 'No duplicate colors in answer'}
+                </span>
+                <label for="duplicate" style=${{ display: won || giveUp || !game ? null : 'none' }}>
+                  Duplicate colors in answer
+                </label>
+                <input type="checkbox" id="duplicate" ref=${el => this.duplicateEl = el} style=${{ display: won || giveUp || !game ? null : 'none' }} />
+              </div>
+              ${won
+                ? html`<div>Won in ${turns.length} turns</div>`
+                : giveUp
+                ? html`<div>Gave-up. Answer was <svg>${game.key.map((c,i) => html`<${Color} x="${25*i}%" y="0" color="${c}" />`)}</svg></div>`
+                : ''
+              }
+              <div>
+                <button style=${{ display: game ? null : 'none' }} onClick=${this.handleNewGame}>
+                  ${ won || giveUp ? 'New Game' : 'give-up' }
+                </button>
+              </div>
+            </div>
+          </div>`;
         }
       }
-
-      const gameView = new GameView(document.querySelector('.container'));
+      render(html`<${GameView} />`, document.body);
     </script>
   </body>
 </html>
