@@ -127,6 +127,69 @@
     <script type="module">
       import { html, render, Component } from 'https://unpkg.com/htm/preact/standalone.mjs';
 
+      class ColorsSelector extends Component {
+        constructor(props) {
+          super(props);
+          this.handleClick = this.handleClick.bind(this);
+        }
+        handleClick({ target }) {
+          if (target.tagName !== 'use') return;
+          const value = this.props.value.slice();
+          const index = target.parentElement.dataset.index;
+          const color = target.getAttribute('fill');
+          value[index] = color;
+          this.props.onChange(value);
+        }
+        render({ colors, value }) {
+          return html`<td colspan="4" class="color-picker" onclick="">
+            <svg>
+              ${value.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
+            </svg>
+            <svg onClick=${this.handleClick}>
+              <g data-index="0">
+                <rect x="-1%" y=${`${colors.indexOf(value[0]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="0%" fill="red" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="16.666%" fill="green" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="33.333%" fill="blue" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="50%" fill="yellow" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="66.666%" fill="black" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="83.333%" fill="white" />
+              </g>
+              <g data-index="1">
+                <rect x="24%" y=${`${colors.indexOf(value[1]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="0%" fill="red" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="16.666%" fill="green" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="33.333%" fill="blue" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="50%" fill="yellow" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="66.666%" fill="black" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="83.333%" fill="white" />
+              </g>
+              <g data-index="2">
+                <rect x="49%" y=${`${colors.indexOf(value[2]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="0%" fill="red" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="16.666%" fill="green" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="33.333%" fill="blue" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="50%" fill="yellow" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="66.666%" fill="black" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="83.333%" fill="white" />
+              </g>
+              <g data-index="3">
+                <rect x="74%" y=${`${colors.indexOf(value[3]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="0%" fill="red" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="16.666%" fill="green" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="33.333%" fill="blue" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="50%" fill="yellow" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="66.666%" fill="black" />
+                <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="83.333%" fill="white" />
+              </g>
+              <symbol id="circle">
+                <circle cx="50%" cy="50%" r="40%" />
+              </symbol>
+            </svg>
+          </td>`;
+        }
+      }
+
       const Color = ({ color, ...props }) =>
         html`<use xlink:href="#circle" width="1.3em" height="1.3em" ...${props} fill="${color}" />`;
 
@@ -172,12 +235,7 @@
             this.setState({ giveUp: true });
           }
         }
-        handlePickColor({ target }) {
-          if (target.tagName !== 'use') return;
-          const index = target.parentElement.dataset.index;
-          const color = target.getAttribute('fill');
-          const pickedColors = this.state.pickedColors.slice();
-          pickedColors[index] = color;
+        handlePickColor(pickedColors) {
           this.setState({ pickedColors });
         }
 
@@ -201,52 +259,7 @@
                 <tfoot style=${{ display: won || giveUp ? 'none' : null }}>
                   <tr>
                     <td><button style=${{ display: giveUp ? 'none' : null }} onClick=${this.handleCheck}>Check</button></td>
-                    <td colspan="4" class="color-picker" onclick="">
-                      <svg>
-                        ${pickedColors.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
-                      </svg>
-                      <svg onClick=${this.handlePickColor}>
-                        <g data-index="0">
-                          <rect x="-1%" y=${`${colors.indexOf(pickedColors[0]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="0%" fill="red" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="16.666%" fill="green" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="33.333%" fill="blue" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="50%" fill="yellow" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="66.666%" fill="black" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="0%" y="83.333%" fill="white" />
-                        </g>
-                        <g data-index="1">
-                          <rect x="24%" y=${`${colors.indexOf(pickedColors[1]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="0%" fill="red" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="16.666%" fill="green" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="33.333%" fill="blue" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="50%" fill="yellow" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="66.666%" fill="black" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="25%" y="83.333%" fill="white" />
-                        </g>
-                        <g data-index="2">
-                          <rect x="49%" y=${`${colors.indexOf(pickedColors[2]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="0%" fill="red" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="16.666%" fill="green" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="33.333%" fill="blue" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="50%" fill="yellow" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="66.666%" fill="black" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="50%" y="83.333%" fill="white" />
-                        </g>
-                        <g data-index="3">
-                          <rect x="74%" y=${`${colors.indexOf(pickedColors[3]) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="0%" fill="red" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="16.666%" fill="green" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="33.333%" fill="blue" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="50%" fill="yellow" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="66.666%" fill="black" />
-                          <use xlink:href="#circle" height="1.3em" width="1.3em" x="75%" y="83.333%" fill="white" />
-                        </g>
-                        <symbol id="circle">
-                          <circle cx="50%" cy="50%" r="40%" />
-                        </symbol>
-                      </svg>
-                    </td>
+                    <${ColorsSelector} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} />
                   </tr>
                 </tfoot>
               </table>
