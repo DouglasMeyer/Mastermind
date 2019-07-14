@@ -131,26 +131,44 @@
         constructor(props) {
           super(props);
           this.handleClick = this.handleClick.bind(this);
+          this.handleRightClick = this.handleRightClick.bind(this);
+        }
+        optionFromTarget(target) {
+          return {
+            index: target.parentElement.dataset.index,
+            color: target.getAttribute('fill')
+          };
         }
         handleClick({ target }) {
           if (target.tagName !== 'use') return;
           const value = this.props.value.slice();
-          const index = target.parentElement.dataset.index;
-          const color = target.getAttribute('fill');
+          const { index, color } = this.optionFromTarget(target);
           value[index] = color;
           this.props.onChange(value);
         }
-        render({ colors, value }) {
+        handleRightClick(event) {
+          event.preventDefault();
+          const { target } = event;
+          if (target.tagName !== 'use') return;
+          const blockedOptions = this.props.blockedOptions.slice();
+          const { index, color } = this.optionFromTarget(target);
+          blockedOptions[index] = {
+            ...blockedOptions[index],
+            [color]: !blockedOptions[index][color]
+          };
+          this.props.onChangeBlockedOptions(blockedOptions);
+        }
+        render({ colors, value, blockedOptions }) {
           return html`<td colspan="4" class="color-picker" onclick="">
             <svg>
               ${value.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
             </svg>
-            <svg onClick=${this.handleClick}>
+            <svg onClick=${this.handleClick} onContextmenu=${this.handleRightClick}>
               ${value.map((color, index) =>
                 html`<g data-index=${index}>
                   <rect x=${`${25*index-1}%`} y=${`${colors.indexOf(color) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
                   ${colors.map((c,i) =>
-                    html`<use xlink:href="#circle" height="1.3em" width="1.3em" x=${`${index*25}%`} y=${`${16.666*i}%`} fill=${c} />`
+                    html`<use xlink:href="#circle" height="1.3em" width="1.3em" x=${`${index*25}%`} y=${`${16.666*i}%`} fill=${c} opacity=${blockedOptions[index][c] ? '0.1' : '1'} />`
                   )}
                 </g>`
               )}
@@ -176,13 +194,15 @@
           this.handleCheck = this.handleCheck.bind(this);
           this.handleNewGame = this.handleNewGame.bind(this);
           this.handlePickColor = this.handlePickColor.bind(this);
+          this.setBlockedOptions = this.setBlockedOptions.bind(this);
           this.newGame();
         }
         newGame() {
           this.setState({
             game: null,
             pickedColors: ['red', 'red', 'red', 'red'],
-            giveUp: false
+            giveUp: false,
+            blockedOptions: new Array(4).fill().map(() => ({}))
           });
         }
 
@@ -210,8 +230,11 @@
         handlePickColor(pickedColors) {
           this.setState({ pickedColors });
         }
+        setBlockedOptions(blockedOptions) {
+          this.setState({ blockedOptions });
+        }
 
-        render({}, { game, pickedColors, giveUp }) {
+        render({}, { game, pickedColors, giveUp, blockedOptions }) {
           const turns = game ? game.turns : [];
           const lastTurn = turns.slice(-1)[0];
           const won = lastTurn && lastTurn.matches === 4;
@@ -231,7 +254,7 @@
                 <tfoot style=${{ display: won || giveUp ? 'none' : null }}>
                   <tr>
                     <td><button style=${{ display: giveUp ? 'none' : null }} onClick=${this.handleCheck}>Check</button></td>
-                    <${ColorsSelector} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} />
+                    <${ColorsSelector} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} blockedOptions=${blockedOptions} onChangeBlockedOptions=${this.setBlockedOptions} />
                   </tr>
                 </tfoot>
               </table>
