@@ -104,9 +104,11 @@
       .board table {
         border-spacing: 0;
       }
+      .board table td:nth-child(3n) {
+        text-align: right;
+      }
       td:first-child { width: 3.7em; }
       tbody td + td { width: 1em; }
-      td + td, tfoot td { text-align: center; }
 
       .color-picker > svg:first-child {
         border: 1px solid black;
@@ -131,7 +133,7 @@
         constructor(props) {
           super(props);
           this.handleClick = this.handleClick.bind(this);
-          this.handleRightClick = this.handleRightClick.bind(this);
+          this.handleBlockColor = this.handleBlockColor.bind(this);
         }
         optionFromTarget(target) {
           return {
@@ -139,14 +141,28 @@
             color: target.getAttribute('fill')
           };
         }
-        handleClick({ target }) {
-          if (target.tagName !== 'use') return;
-          const value = this.props.value.slice();
-          const { index, color } = this.optionFromTarget(target);
-          value[index] = color;
-          this.props.onChange(value);
+        handleClick(event) {
+          if (this.cancelClick && this.lastEvent &&
+            this.lastEvent.target === event.target &&
+            event.timeStamp < this.lastEvent.timeStamp + 400
+          ) {
+            this.cancelClick();
+            this.handleBlockColor(event);
+          } else {
+            this.lastEvent = event;
+            this.cancelClick = this.handleSelectColor(event);
+          }
         }
-        handleRightClick(event) {
+        handleSelectColor({ target }) {
+          if (target.tagName !== 'use') return;
+          const { value } = this.props;
+          const { index, color } = this.optionFromTarget(target);
+          const newValue = value.slice();
+          newValue[index] = color;
+          this.props.onChange(newValue);
+          return () => this.props.onChange(value);
+        }
+        handleBlockColor(event) {
           event.preventDefault();
           const { target } = event;
           if (target.tagName !== 'use') return;
@@ -159,11 +175,11 @@
           this.props.onChangeBlockedOptions(blockedOptions);
         }
         render({ colors, value, blockedOptions }) {
-          return html`<td colspan="4" class="color-picker" onclick="">
+          return html`<td class="color-picker" onclick="">
             <svg>
               ${value.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
             </svg>
-            <svg onClick=${this.handleClick} onContextmenu=${this.handleRightClick}>
+            <svg onClick=${this.handleClick} onContextmenu=${this.handleBlockColor}>
               ${value.map((color, index) =>
                 html`<g data-index=${index}>
                   <rect x=${`${25*index-1}%`} y=${`${colors.indexOf(color) * 100/6 - 1}%`} width="26%" height="17.666%" fill="#88E" stroke="none" />
@@ -183,11 +199,43 @@
       const Color = ({ color, ...props }) =>
         html`<use xlink:href="#circle" width="1.3em" height="1.3em" ...${props} fill="${color}" />`;
 
-      const Turn = ({ guess, matches, misses }) => html`<tr>
+      const Turn = ({ guess, matches, misses, children, ...props }) => html`<tr ...${props}>
         <td><span title="color in correct spot">${new Array(matches).fill('◼').join('')}</span><span title="color not in correct spot">${new Array(misses).fill('◻').join('')}</span></td>
         <td><svg>${guess.map((g, i, a) => html`<${Color} color="${g}" x="${`${100/a.length*i}%`}" />`)}</svg></td>
+        ${children}
       </tr>`;
 
+      const colorCombinations = new Array(Math.pow(colors.length, 4)).fill().map((_x, i) => [
+        colors[Math.floor(i / colors.length / colors.length / colors.length) % colors.length],
+        colors[Math.floor(i / colors.length / colors.length) % colors.length],
+        colors[Math.floor(i / colors.length) % colors.length],
+        colors[i % colors.length],
+      ]);
+
+      function possibleColors({ repeats, turns }) {
+        return colorCombinations.filter((combination) => {
+          if (!repeats && !combination.every(firstOccurance)) return false;
+
+          return turns.every((turn) => {
+            const { matches, misses } = MastermindGame.overlap(combination, turn.guess);
+            return matches === turn.matches && misses === turn.misses;
+          });
+        });
+      }
+
+      const dig = (...keys) => keys.reduce((o,k)=> o && o[k]);
+      const scoreKey = 'MasterMind_score';
+      const costToStartGame = 3;
+      const didWin = game => ((dig(game, 'turns') || []).slice(-1)[0] || {}).matches === 4;
+      const getMistakesFor = (guess, turns) =>
+        turns.filter(turn => {
+          const { matches, misses } = MastermindGame.overlap(guess, turn.guess);
+          return matches !== turn.matches || misses !== turn.misses;
+        });
+      const getMistakes = game => {
+        const turns = game ? game.turns : [];
+        return turns.filter(({guess}, index) => getMistakesFor(guess, turns.slice(0, index)).length);
+      };
       class GameView extends Component {
         constructor(props) {
           super(props);
@@ -202,26 +250,35 @@
             game: null,
             pickedColors: ['red', 'red', 'red', 'red'],
             giveUp: false,
-            blockedOptions: new Array(4).fill().map(() => ({}))
+            blockedOptions: new Array(4).fill().map(() => ({})),
+            score: (function(){
+              try {
+                return JSON.parse(localStorage.getItem(scoreKey));
+              } catch (e) {}
+            })() || 0
           });
         }
 
         handleCheck() {
-          const pickedColors = this.state.pickedColors.slice();
-          if (this.state.game) {
-            this.state.game.guess(pickedColors);
-            this.forceUpdate();
-          } else {
-            const game = this.state.game || new MastermindGame(colors, this.duplicateEl.checked);
-            game.guess(this.state.pickedColors.slice());
-            this.setState({ game });
+          const { pickedColors } = this.state;
+          let { game, score } = this.state;
+          if (!game) {
+            game = new MastermindGame(colors, this.duplicateEl.checked);
+            score = Math.max(0, score - costToStartGame);
+            this.setState({ game, score });
           }
+          game.guess(pickedColors.slice());
+          if (this.state.game) this.forceUpdate();
+
+          if (didWin(game)) {
+            score = score + 11 - game.turns.length - getMistakes(game).length;
+            this.setState({ score });
+          }
+          localStorage.setItem(scoreKey, score);
         }
         handleNewGame() {
           const { game, giveUp } = this.state;
-          const lastTurn = game.turns.slice(-1)[0];
-          const won = lastTurn && lastTurn.matches === 4;
-          if (won || giveUp) {
+          if (didWin(game) || giveUp) {
             this.newGame();
           } else {
             this.setState({ giveUp: true });
@@ -234,11 +291,23 @@
           this.setState({ blockedOptions });
         }
 
-        render({}, { game, pickedColors, giveUp, blockedOptions }) {
+        render({}, { game, pickedColors, giveUp, blockedOptions, selectedTurn, score }) {
+          window.state = this.state;
           const turns = game ? game.turns : [];
-          const lastTurn = turns.slice(-1)[0];
-          const won = lastTurn && lastTurn.matches === 4;
+          const won = didWin(game);
           const lastGuess = giveUp ? game.key : pickedColors;
+          const mistakes = getMistakes(game);
+          const turnMistakes = selectedTurn
+            ? getMistakesFor(selectedTurn.guess, turns.slice(0, turns.indexOf(selectedTurn)))
+            : [];
+          const displayScore = Math.max(0,
+            game
+            ? (won
+              ? score - (11 - turns.length - mistakes.length)
+              : score
+              )
+            : score - costToStartGame
+          );
 
           return html`<div class="container">
             <div class="instructions">
@@ -248,13 +317,44 @@
             </div>
             <div class="board">
               <table>
-                <tbody>
-                  ${turns.map(turn => html`<${Turn} ...${turn} />`)}
+                <thead>
+                  <td />
+                  <td>Score</td>
+                  <td>${displayScore}</td>
+                </thead>
+                <tbody onMouseOut=${() => this.setState({ selectedTurn: null })}>
+                  ${turns.map((turn, index) => html`<${Turn} ...${turn}
+                    onMouseOver=${() => this.setState({ selectedTurn: turn })}
+                    style=${{
+                      backgroundColor: (won || giveUp) && turnMistakes.includes(turn) ? 'rgba(255,0,0, 0.2)' : ''
+                    }}
+                  ><td>
+                    ${
+                      won && index === turns.index-1
+                      ? '+1'
+                      : (won || giveUp) && mistakes.includes(turn)
+                      ? (won ? '-1' : '-0')
+                      : ''
+                    }
+                  </td></>`)}
+                  ${ won && new Array(Math.max(0, 11-turns.length-costToStartGame)).fill().map(() => html`<tr>
+                    <td />
+                    <td />
+                    <td>+1</td>
+                  </tr>`) }
+                  ${ giveUp && html`<tr>
+                    <td>Answer</td>
+                    <td>
+                      <svg>${game.key.map((g, i, a) => html`<${Color} color="${g}" x="${`${100/a.length*i}%`}" />`)}</svg>
+                    </td>
+                    <td>-${costToStartGame}</td>
+                  </tr>` }
                 </tbody>
                 <tfoot style=${{ display: won || giveUp ? 'none' : null }}>
                   <tr>
                     <td><button style=${{ display: giveUp ? 'none' : null }} onClick=${this.handleCheck}>Check</button></td>
                     <${ColorsSelector} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} blockedOptions=${blockedOptions} onChangeBlockedOptions=${this.setBlockedOptions} />
+                    <td />
                   </tr>
                 </tfoot>
               </table>
@@ -272,12 +372,12 @@
               ${won
                 ? html`<div>Won in ${turns.length} turns</div>`
                 : giveUp
-                ? html`<div>Gave-up. Answer was <svg>${game.key.map((c,i) => html`<${Color} x="${25*i}%" y="0" color="${c}" />`)}</svg></div>`
+                ? html`<div>Gave-up.</div>`
                 : ''
               }
               <div>
                 <button style=${{ display: game ? null : 'none' }} onClick=${this.handleNewGame}>
-                  ${ won || giveUp ? 'New Game' : 'give-up' }
+                  ${ won || giveUp ? 'New Game' : `give-up -${costToStartGame}` }
                 </button>
               </div>
             </div>
