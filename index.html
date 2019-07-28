@@ -271,7 +271,7 @@
           if (this.state.game) this.forceUpdate();
 
           if (didWin(game)) {
-            score = score + 11 - game.turns.length - getMistakes(game).length;
+            score = score + Math.max(0, 11 - game.turns.length - getMistakes(game).length);
             this.setState({ score });
           }
           localStorage.setItem(scoreKey, score);
@@ -303,7 +303,7 @@
           const displayScore = Math.max(0,
             game
             ? (won
-              ? score - (11 - turns.length - mistakes.length)
+              ? score - Math.max(0, 11 - turns.length - mistakes.length)
               : score
               )
             : score - costToStartGame
@@ -333,7 +333,7 @@
                       won && index === turns.index-1
                       ? '+1'
                       : (won || giveUp) && mistakes.includes(turn)
-                      ? (won ? '-1' : '-0')
+                      ? ((won && mistakes.slice(0, Math.max(3, 11 - turns.length - mistakes.length)).includes(turn)) ? '-1' : '-0')
                       : ''
                     }
                   </td></>`)}
