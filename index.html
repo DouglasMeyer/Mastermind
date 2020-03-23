@@ -175,8 +175,11 @@
           };
           this.props.onChangeBlockedOptions(blockedOptions);
         }
+        animate() {
+          this.el.animate([{transform:'translate(-1px,-1.6em)'},{transform:'translate(0,0)'}], { duration: 300 });
+        }
         render({ colors, value, blockedOptions }) {
-          return html`<td class="color-picker" onclick="">
+          return html`<td class="color-picker" onclick="" ref=${el => this.el = el}>
             <svg>
               ${value.map((color, index, arr) => html`<${Color} y="0" x=${`${100/arr.length*index}%`} color=${color} />`)}
             </svg>
@@ -276,6 +279,7 @@
             this.setState({ score });
           }
           localStorage.setItem(scoreKey, score);
+          this.colorSelector.animate();
         }
         handleNewGame() {
           const { game, giveUp } = this.state;
@@ -354,7 +358,7 @@
                 <tfoot style=${{ display: won || giveUp ? 'none' : null }}>
                   <tr>
                     <td><button style=${{ display: giveUp ? 'none' : null }} onClick=${this.handleCheck}>Check</button></td>
-                    <${ColorsSelector} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} blockedOptions=${blockedOptions} onChangeBlockedOptions=${this.setBlockedOptions} />
+                    <${ColorsSelector} ref=${el => this.colorSelector = el} colors=${colors} value=${pickedColors} onChange=${this.handlePickColor} blockedOptions=${blockedOptions} onChangeBlockedOptions=${this.setBlockedOptions} />
                     <td />
                   </tr>
                 </tfoot>
